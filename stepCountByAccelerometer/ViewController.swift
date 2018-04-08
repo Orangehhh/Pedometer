@@ -2,7 +2,7 @@
 //  ViewController.swift
 //  stepCountByAccelerometer
 //
-//  Created by 刘皓 on 4/4/18.
+//  Created by Hao Liu on 4/4/18.
 //  Copyright © 2018 Hao. All rights reserved.
 //
 
@@ -17,11 +17,11 @@ class ViewController: UIViewController {
     
     let motion = CMMotionManager()
     
-    var isProcessing: Bool = false
+    var isProcessing: Bool = false      
     
     var status: Int = 0    // 0: still  1 : walk  2: run
 
-    let sampleRate: Double = 60.0     //30Hz
+    let sampleRate: Double = 60.0     // sample frequency  Hz
 
     let numOfSampleInWindow: Int = 128
     
@@ -37,25 +37,37 @@ class ViewController: UIViewController {
     
     var curIndex: Int = 0
     
-    let walkfqlb:Double = 1.25
+    let walkfqlb: Double = 1.25
     
-    let walkfqub:Double = 2.0
+    let walkfqub: Double = 2.0
     
-    let walkMaglb:Double = 20.0
+    let walkMaglb: Double = 20.0
     
-    var totalStep: Int = 0
+    var totalWalkStep: Int = 0
     
     var previousFrequency: Double = 0.0
     
     var currentFrequency: Double = 0.0
     
-    var continuesCount: Int = 0
+    var continuesWalkCount: Int = 0
+    
+    let runfqlb: Double = 2.0
+    
+    let runfqub: Double = 3.5
+    
+    let runMaglb: Double = 1000.0
+    
+    var totalRunStep: Int = 0
+    
+    var continuesRunCount: Int = 0
     
     @IBOutlet weak var startBtn: UIButton!
     
     @IBOutlet weak var outputLabel: UILabel!
     
-    @IBOutlet weak var stepLabel: UILabel!
+    @IBOutlet weak var walkStepLabel: UILabel!
+    
+    @IBOutlet weak var runStepLabel: UILabel!
     
     @IBOutlet weak var lineChartView: LineChartView!
     
@@ -65,7 +77,8 @@ class ViewController: UIViewController {
         self.fft_weights = vDSP_create_fftsetupD(vDSP_Length(log2(Float(numOfSampleInWindow))), FFTRadix(kFFTRadix2))
         self.lineChartView.data = nil
         self.outputLabel.text = nil
-        self.stepLabel.text = nil
+        self.walkStepLabel.text = nil
+        self.runStepLabel.text = nil
     }
     
     @IBAction func startBtn(_ sender: UIButton) {
@@ -126,7 +139,7 @@ class ViewController: UIViewController {
                             let dataPoint = ChartDataEntry(x: Double(i), y: fftMagnitudes[i])
                             dataEntries.append(dataPoint)
                         }
-                        let set = LineChartDataSet(values: dataEntries, label: "hi")
+                        let set = LineChartDataSet(values: dataEntries, label: "FFT")
                         let data = LineChartData()
                         data.addDataSet(set)
                         
@@ -141,22 +154,37 @@ class ViewController: UIViewController {
                         self.currentFrequency = 1.0 / (self.windowSize / Double(IdxOfmaxVal))
                         if (self.currentFrequency >= self.walkfqlb && self.currentFrequency <= self.walkfqub && maxVal >= self.walkMaglb) {
                             self.status = 1
-                            if (self.continuesCount == 0) {
-                                self.totalStep += Int(self.windowSize * self.currentFrequency)
+                            self.continuesRunCount = 0
+                            if (self.continuesWalkCount == 0) {
+                                self.totalWalkStep += Int(self.windowSize * self.currentFrequency)
                             }
                             else {
-                                self.totalStep += Int((self.windowSize - 1) * (self.currentFrequency - self.previousFrequency) + self.previousFrequency)
+                                self.totalWalkStep += Int((self.windowSize - 1) * (self.currentFrequency - self.previousFrequency) + self.previousFrequency)
                             }
-                            self.continuesCount += 1
+                            self.continuesWalkCount += 1
+                            self.previousFrequency = self.currentFrequency
+                        }
+                        else if (self.currentFrequency > self.runfqlb && self.currentFrequency <= self.runfqub && maxVal >= self.runMaglb) {
+                            self.status = 2
+                            self.continuesWalkCount = 0
+                            if (self.continuesRunCount == 0) {
+                                self.totalRunStep += Int(self.windowSize * self.currentFrequency)
+                            }
+                            else {
+                                self.totalRunStep += Int((self.windowSize - 1) * (self.currentFrequency - self.previousFrequency) + self.previousFrequency)
+                            }
+                            self.continuesRunCount += 1
                             self.previousFrequency = self.currentFrequency
                         }
                         else {
                             self.status = 0
-                            self.continuesCount = 0
+                            self.continuesWalkCount = 0
+                            self.continuesRunCount = 0
                             self.previousFrequency = 0.0
                         }
                     }
-                    self.stepLabel.text = "\(self.totalStep)"
+                    self.walkStepLabel.text = "\(self.totalWalkStep)"
+                    self.runStepLabel.text = "\(self.totalRunStep)"
                     if self.status == 0 {
                         self.outputLabel.text = "Still"
                     }
@@ -180,7 +208,8 @@ class ViewController: UIViewController {
         self.motion.stopAccelerometerUpdates()
         self.lineChartView.data = nil
         self.outputLabel.text = nil
-        self.stepLabel.text = nil
+        self.walkStepLabel.text = nil
+        self.runStepLabel.text = nil
         self.isProcessing = false
         startBtn.setTitle("Start", for: UIControlState.normal)
         self.timer.invalidate()

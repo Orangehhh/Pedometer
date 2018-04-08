@@ -12,7 +12,6 @@
 		C5E170AB2075C627008C1B2D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C5E170A92075C627008C1B2D /* Main.storyboard */; };
 		C5E170AD2075C628008C1B2D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C5E170AC2075C628008C1B2D /* Assets.xcassets */; };
 		C5E170B02075C628008C1B2D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C5E170AE2075C628008C1B2D /* LaunchScreen.storyboard */; };
-		C5E170B820781584008C1B2D /* runOrWalk.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = C5E170B720781584008C1B2D /* runOrWalk.mlmodel */; };
 		C5E170C720799EE8008C1B2D /* Charts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C5E170BF2079998E008C1B2D /* Charts.framework */; };
 		C5E170C820799EE8008C1B2D /* Charts.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C5E170BF2079998E008C1B2D /* Charts.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -63,7 +62,6 @@
 		C5E170AC2075C628008C1B2D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C5E170AF2075C628008C1B2D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		C5E170B12075C629008C1B2D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		C5E170B720781584008C1B2D /* runOrWalk.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; name = runOrWalk.mlmodel; path = python/runOrWalk.mlmodel; sourceTree = "<group>"; };
 		C5E170B92079998E008C1B2D /* Charts.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Charts.xcodeproj; path = "../../../../../Downloads/Charts-master/Charts.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -102,7 +100,6 @@
 				C5E170A72075C627008C1B2D /* ViewController.swift */,
 				C5E170A92075C627008C1B2D /* Main.storyboard */,
 				C5E170AC2075C628008C1B2D /* Assets.xcassets */,
-				C5E170B720781584008C1B2D /* runOrWalk.mlmodel */,
 				C5E170AE2075C628008C1B2D /* LaunchScreen.storyboard */,
 				C5E170B12075C629008C1B2D /* Info.plist */,
 				C5E170B92079998E008C1B2D /* Charts.xcodeproj */,
@@ -216,7 +213,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				C5E170A82075C627008C1B2D /* ViewController.swift in Sources */,
-				C5E170B820781584008C1B2D /* runOrWalk.mlmodel in Sources */,
 				C5E170A62075C627008C1B2D /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
