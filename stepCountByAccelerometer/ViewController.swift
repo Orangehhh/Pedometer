@@ -101,8 +101,10 @@ class ViewController: UIViewController {
             startBtn.setTitle("Stop", for: UIControlState.normal)
             
             // Configure a timer to fetch the data.
-            self.timer = Timer(fire: Date(), interval: (1.0 / sampleRate),
-                               repeats: true, block: { (timer) in
+//            self.timer = Timer(fire: Date(), interval: (1.0 / sampleRate),
+//                               repeats: true, block: { (timer) in
+            self.motion.startAccelerometerUpdates(to: OperationQueue.current!) {
+                    (accelerometerData, error) in
                 if let data = self.motion.accelerometerData {
                     
                     let x = data.acceleration.x
@@ -182,6 +184,7 @@ class ViewController: UIViewController {
                             self.continuesRunCount = 0
                             self.previousFrequency = 0.0
                         }
+                        print(self.totalWalkStep)
                     }
                     self.walkStepLabel.text = "\(self.totalWalkStep)"
                     self.runStepLabel.text = "\(self.totalRunStep)"
@@ -194,10 +197,9 @@ class ViewController: UIViewController {
                     else {
                         self.outputLabel.text = "Run"
                     }
-                   
                 }
-            })
-            RunLoop.current.add(self.timer!, forMode: .defaultRunLoopMode)
+            }
+//            RunLoop.current.add(self.timer!, forMode: .defaultRunLoopMode)
         }
         else {
             print("Accelerometer not support")
@@ -212,7 +214,7 @@ class ViewController: UIViewController {
         self.runStepLabel.text = nil
         self.isProcessing = false
         startBtn.setTitle("Start", for: UIControlState.normal)
-        self.timer.invalidate()
+//        self.timer.invalidate()
     }
 }
 
