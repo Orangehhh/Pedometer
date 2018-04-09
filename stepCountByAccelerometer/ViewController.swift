@@ -61,7 +61,15 @@ class ViewController: UIViewController {
     
     var continuesRunCount: Int = 0
     
+    let dtformatter = DateFormatter()
+    
+    var seconds = 0
+    
     @IBOutlet weak var startBtn: UIButton!
+    
+    @IBOutlet weak var resetBtn: UIBarButtonItem!
+    
+    @IBOutlet weak var timeLabel: UILabel!
     
     @IBOutlet weak var outputLabel: UILabel!
     
@@ -71,29 +79,63 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var lineChartView: LineChartView!
     
+    @IBOutlet weak var navBar: UINavigationBar!
+    
+    @IBAction func tapReset(_ sender: UITapGestureRecognizer) {
+        reset()
+    }
+    
+    func reset() {
+        print("reset")
+        if self.motion.isAccelerometerActive {
+            self.motion.stopAccelerometerUpdates()
+        }
+        if (timer != nil && self.timer.isValid) {
+            self.timer.invalidate()
+        }
+        self.signalArr = [Double]()
+        self.lineChartView.data = nil
+        self.seconds = 0
+        self.timeLabel.text = timeString(time: TimeInterval(self.seconds))
+        self.outputLabel.text = ""
+        self.walkStepLabel.text = "0"
+        self.runStepLabel.text = "0"
+        self.isProcessing = false
+        self.previousFrequency = 0.0
+        self.lastUpdateIndex = 0
+        self.curIndex = 0
+        self.totalWalkStep = 0
+        self.totalRunStep = 0
+        self.continuesRunCount = 0
+        self.continuesWalkCount = 0
+        self.status = 0
+        startBtn.setTitle("Start", for: UIControlState.normal)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        addNavBarTitle()
+        customBtn()
         self.windowSize = Double(self.numOfSampleInWindow) / self.sampleRate
         self.fft_weights = vDSP_create_fftsetupD(vDSP_Length(log2(Float(numOfSampleInWindow))), FFTRadix(kFFTRadix2))
-        self.lineChartView.data = nil
-        self.outputLabel.text = nil
-        self.walkStepLabel.text = nil
-        self.runStepLabel.text = nil
+        reset()
     }
     
     @IBAction func startBtn(_ sender: UIButton) {
         if !self.isProcessing {
+            runTimer()
             startPredict()
         }
         else {
+            timer.invalidate()
             stopPredict()
         }
     }
-
+    
     func startPredict() {
 
         // Make sure the accelerometer hardware is available.
-        if (self.motion.isAccelerometerAvailable && self.motion.isGyroAvailable) {
+        if (self.motion.isAccelerometerAvailable) {
             self.motion.accelerometerUpdateInterval = 1.0 / sampleRate
             self.motion.startAccelerometerUpdates()
             
@@ -134,11 +176,11 @@ class ViewController: UIViewController {
                         vDSP_fft_zipD(self.fft_weights, &splitComplexInput, 1, vDSP_Length(log2(Float(self.numOfSampleInWindow))), FFTDirection(FFT_FORWARD));
                         
                         vDSP_zvmagsD(&splitComplexInput, 1, &fftMagnitudes, 1, vDSP_Length(self.signalArr.count));
-//                        dump(fftMagnitudes)
                         
+//                        dump(fftMagnitudes)
                         var dataEntries: [ChartDataEntry] = []
-                        for i in 0..<self.signalArr.count {
-                            let dataPoint = ChartDataEntry(x: Double(i), y: fftMagnitudes[i])
+                        for i in 1..<self.signalArr.count {
+                            let dataPoint = ChartDataEntry(x: Double(i), y: (fftMagnitudes[i]))
                             dataEntries.append(dataPoint)
                         }
                         let set = LineChartDataSet(values: dataEntries, label: "FFT")
@@ -152,7 +194,7 @@ class ViewController: UIViewController {
                         if IdxOfmaxVal >= Int(self.numOfSampleInWindow / 2) {
                             IdxOfmaxVal = self.numOfSampleInWindow - IdxOfmaxVal
                         }
-                        print(IdxOfmaxVal)
+//                        print(IdxOfmaxVal)
                         self.currentFrequency = 1.0 / (self.windowSize / Double(IdxOfmaxVal))
                         if (self.currentFrequency >= self.walkfqlb && self.currentFrequency <= self.walkfqub && maxVal >= self.walkMaglb) {
                             self.status = 1
@@ -184,7 +226,7 @@ class ViewController: UIViewController {
                             self.continuesRunCount = 0
                             self.previousFrequency = 0.0
                         }
-                        print(self.totalWalkStep)
+//                        print(self.totalWalkStep)
                     }
                     self.walkStepLabel.text = "\(self.totalWalkStep)"
                     self.runStepLabel.text = "\(self.totalRunStep)"
@@ -209,12 +251,45 @@ class ViewController: UIViewController {
     func stopPredict() {
         self.motion.stopAccelerometerUpdates()
         self.lineChartView.data = nil
-        self.outputLabel.text = nil
-        self.walkStepLabel.text = nil
-        self.runStepLabel.text = nil
+        self.outputLabel.text = ""
+        self.walkStepLabel.text = "\(self.totalWalkStep)"
+        self.runStepLabel.text = "\(self.totalRunStep)"
         self.isProcessing = false
         startBtn.setTitle("Start", for: UIControlState.normal)
-//        self.timer.invalidate()
+        self.timer.invalidate()
+    }
+    
+    func getDate() -> (String) {
+        let currentTime = NSDate()
+        dtformatter.dateFormat = "LLLL dd"
+        return dtformatter.string(from: currentTime as Date)
+    }
+    
+    func addNavBarTitle() {
+        self.navBar.topItem?.title = "\(getDate())"
+    }
+    
+    func customBtn() {
+        startBtn.frame = CGRect(x: 160, y: 100, width: 100, height: 100)
+        startBtn.layer.cornerRadius = 0.5 * startBtn.bounds.size.width
+        startBtn.clipsToBounds = true
+        startBtn.setImage(UIImage(named:"thumbsUp.png"), for: UIControlState.normal)
+    }
+    
+    func runTimer() {
+        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(ViewController.updateTimer), userInfo: nil, repeats: true)
+    }
+    
+    @objc func updateTimer() {
+        self.seconds += 1
+        self.timeLabel.text = timeString(time: TimeInterval(self.seconds))
+    }
+    
+    func timeString(time: TimeInterval) -> String {
+        let hours = Int(time) / 3600
+        let minutes = Int(time) / 60 % 60
+        let seconds = Int(time) % 60
+        return String(format: "%02i:%02i:%02i", hours, minutes, seconds)
     }
 }
 
