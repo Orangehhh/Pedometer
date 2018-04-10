@@ -21,11 +21,11 @@ class ViewController: UIViewController {
     
     var status: Int = 0    // 0: still  1 : walk  2: run
 
-    let sampleRate: Double = 60.0     // sample frequency  Hz
+    let sampleRate: Double = 50     // sample frequency  Hz
 
     let numOfSampleInWindow: Int = 128
     
-    let numOfStrideSample: Int = 32
+    let numOfStrideSample: Int = 25
     
     var windowSize: Double = 0.0
     
@@ -39,9 +39,9 @@ class ViewController: UIViewController {
     
     let walkfqlb: Double = 1.25
     
-    let walkfqub: Double = 2.0
+    let walkfqub: Double = 2.33
     
-    let walkMaglb: Double = 20.0
+    let walkMaglb: Double = 10.0
     
     var totalWalkStep: Int = 0
     
@@ -51,7 +51,7 @@ class ViewController: UIViewController {
     
     var continuesWalkCount: Int = 0
     
-    let runfqlb: Double = 2.0
+    let runfqlb: Double = 2.33
     
     let runfqub: Double = 3.5
     
@@ -64,6 +64,14 @@ class ViewController: UIViewController {
     let dtformatter = DateFormatter()
     
     var seconds = 0
+    
+    var x1: Double = 0.0
+    var y1: Double = 0.0
+    var x2: Double = 0.0
+    var y2: Double = 0.0
+    var x3: Double = 0.0
+    var y3: Double = 0.0
+    var point: Double = 0.0
     
     @IBOutlet weak var startBtn: UIButton!
     
@@ -81,12 +89,14 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var navBar: UINavigationBar!
     
+    @IBOutlet weak var frequencyLabel: UILabel!
+    
     @IBAction func tapReset(_ sender: UITapGestureRecognizer) {
         reset()
     }
     
     func reset() {
-        print("reset")
+//        print("reset")
         if self.motion.isAccelerometerActive {
             self.motion.stopAccelerometerUpdates()
         }
@@ -194,8 +204,29 @@ class ViewController: UIViewController {
                         if IdxOfmaxVal >= Int(self.numOfSampleInWindow / 2) {
                             IdxOfmaxVal = self.numOfSampleInWindow - IdxOfmaxVal
                         }
-//                        print(IdxOfmaxVal)
-                        self.currentFrequency = 1.0 / (self.windowSize / Double(IdxOfmaxVal))
+                        if IdxOfmaxVal > 0 && IdxOfmaxVal < self.numOfSampleInWindow - 1 {
+                            self.x1 = Double(IdxOfmaxVal - 1)
+                            self.y1 = fftMagnitudes[IdxOfmaxVal - 1]
+                            self.x2 = Double(IdxOfmaxVal)
+                            self.y2 = fftMagnitudes[IdxOfmaxVal]
+                            self.x3 = Double(IdxOfmaxVal + 1)
+                            self.y3 = fftMagnitudes[IdxOfmaxVal + 1]
+                            
+                            let part1: Double = (self.y3 - self.y2) * self.x1 * self.x1
+                            let part2: Double = (self.y2 - self.y1) * self.x3 * self.x3
+                            let part3: Double = (self.y1 - self.y3) * self.x2 * self.x2
+                            let part4: Double = self.x1 * (self.y3 - self.y2)
+                            let part5: Double = self.x3 * (self.y2 - self.y1)
+                            let part6: Double = self.x2 * (self.y1 - self.y3)
+            
+                            self.point = (part1 + part2 + part3) / 2 / (part4 + part5 + part6)
+                        }
+                        else {
+                            self.point = Double(IdxOfmaxVal)
+                        }
+//                        self.point = Double(IdxOfmaxVal)
+                        print(self.point)
+                        self.currentFrequency = 1.0 / (self.windowSize / Double(self.point))
                         if (self.currentFrequency >= self.walkfqlb && self.currentFrequency <= self.walkfqub && maxVal >= self.walkMaglb) {
                             self.status = 1
                             self.continuesRunCount = 0
@@ -226,6 +257,7 @@ class ViewController: UIViewController {
                             self.continuesRunCount = 0
                             self.previousFrequency = 0.0
                         }
+                        self.frequencyLabel.text = "\(self.currentFrequency) \n   \(self.point)  \n \(IdxOfmaxVal)"
 //                        print(self.totalWalkStep)
                     }
                     self.walkStepLabel.text = "\(self.totalWalkStep)"
