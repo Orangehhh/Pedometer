@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4526F796207C58E000587036 /* Charts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4526F793207C58B700587036 /* Charts.framework */; };
 		4526F797207C58E000587036 /* Charts.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4526F793207C58B700587036 /* Charts.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		45ED76AB208535A300F0321E /* AnalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45ED76AA208535A300F0321E /* AnalController.swift */; };
 		C5E170A62075C627008C1B2D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5E170A52075C627008C1B2D /* AppDelegate.swift */; };
 		C5E170A82075C627008C1B2D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5E170A72075C627008C1B2D /* ViewController.swift */; };
 		C5E170AB2075C627008C1B2D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C5E170A92075C627008C1B2D /* Main.storyboard */; };
@@ -56,6 +57,7 @@
 
 /* Begin PBXFileReference section */
 		4526F78D207C58B700587036 /* Charts.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Charts.xcodeproj; path = "../../../../Downloads/Charts-master 2/Charts.xcodeproj"; sourceTree = "<group>"; };
+		45ED76AA208535A300F0321E /* AnalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalController.swift; sourceTree = "<group>"; };
 		C5E170A22075C627008C1B2D /* stepCountByAccelerometer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = stepCountByAccelerometer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5E170A52075C627008C1B2D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C5E170A72075C627008C1B2D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -106,6 +108,7 @@
 			isa = PBXGroup;
 			children = (
 				C5E170A52075C627008C1B2D /* AppDelegate.swift */,
+				45ED76AA208535A300F0321E /* AnalController.swift */,
 				C5E170A72075C627008C1B2D /* ViewController.swift */,
 				C5E170A92075C627008C1B2D /* Main.storyboard */,
 				C5E170AC2075C628008C1B2D /* Assets.xcassets */,
@@ -217,6 +220,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				45ED76AB208535A300F0321E /* AnalController.swift in Sources */,
 				C5E170A82075C627008C1B2D /* ViewController.swift in Sources */,
 				C5E170A62075C627008C1B2D /* AppDelegate.swift in Sources */,
 			);
