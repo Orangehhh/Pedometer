@@ -25,7 +25,7 @@ class AnalController: UIViewController {
     
     let numOfSampleInWindow: Int = 128
     
-    let numOfStrideSample: Int = 25
+    let numOfStrideSample: Int = 30
     
     var windowSize: Double = 0.0
     
