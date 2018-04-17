@@ -21,17 +21,21 @@ class ViewController: UIViewController {
     
     var status: Int = 0    // 0: still  1 : walk  2: run
 
-    let sampleRate: Double = 50     // sample frequency  Hz
+    let sampleRate: Double = 60     // sample frequency  Hz
 
     let numOfSampleInWindow: Int = 128
     
-    let numOfStrideSample: Int = 25
+    let numOfStrideSample: Int = 30
+    
+    let updateInterval = 1    // Queue size used to cache historical steps
     
     var windowSize: Double = 0.0
     
     var strideWindowSize: Double = 0.0
     
     var signalArr = [Double]()
+    
+    var windowArr = [Double]()
     
     var fft_weights: FFTSetupD!
     
@@ -45,7 +49,7 @@ class ViewController: UIViewController {
     
     let walkMaglb: Double = 10.0
     
-    var lastWalkStep: Double = 0.0
+    var lastWalkStep = Queue<Double>()
     
     var totalWalkStep: Double = 0.0
     
@@ -61,7 +65,7 @@ class ViewController: UIViewController {
     
     let runMaglb: Double = 1000.0
     
-    var lastRunStep: Double = 0.0
+    var lastRunStep = Queue<Double>()
     
     var totalRunStep: Double = 0.0
     
@@ -70,6 +74,8 @@ class ViewController: UIViewController {
     let dtformatter = DateFormatter()
     
     var seconds = 0
+    
+    let pi: Double = 3.1415926
     
     var x1: Double = 0.0
     var y1: Double = 0.0
@@ -115,6 +121,7 @@ class ViewController: UIViewController {
             self.timer.invalidate()
         }
         self.signalArr = [Double]()
+        self.windowArr = [Double]()
 //        self.lineChartView.data = nil
         self.seconds = 0
         self.timeLabel.text = timeString(time: TimeInterval(self.seconds))
@@ -129,6 +136,8 @@ class ViewController: UIViewController {
         self.totalRunStep = 0
         self.continuesRunCount = 0
         self.continuesWalkCount = 0
+        self.lastRunStep = Queue<Double>()
+        self.lastWalkStep = Queue<Double>()
         self.status = 0
         startBtn.setTitle("Start", for: UIControlState.normal)
     }
@@ -155,7 +164,20 @@ class ViewController: UIViewController {
     }
     
     func startPredict() {
-
+        
+        //                        Hann Window
+        if self.windowArr.count == 0 {
+            for i in 0..<self.numOfSampleInWindow {
+                self.windowArr.append(0.5 * (1 - cos(2 * self.pi * Double(i) / (Double(self.numOfSampleInWindow - 1)))))
+            }
+        }
+        
+//        if self.signalArr.count == 0 {
+//            for _ in 0..<self.numOfSampleInWindow - self.numOfStrideSample {
+//                self.signalArr.append(0.0)
+//            }
+//        }
+        
         // Make sure the accelerometer hardware is available.
         if (self.motion.isAccelerometerAvailable) {
             self.motion.accelerometerUpdateInterval = 1.0 / sampleRate
@@ -191,13 +213,15 @@ class ViewController: UIViewController {
                         var dupSignalArr = [Double](repeating:0.0, count:self.signalArr.count)
                         let sumArr = self.signalArr.reduce(0, +)
                         for i in 0..<dupSignalArr.count {
-                            dupSignalArr[i] = self.signalArr[i] - sumArr / Double(self.signalArr.count)
+                            dupSignalArr[i] = (self.signalArr[i] - sumArr / Double(self.signalArr.count)) * self.windowArr[i]
                         }
                         var splitComplexInput = DSPDoubleSplitComplex(realp: &dupSignalArr, imagp: &zeroArray)
 
                         vDSP_fft_zipD(self.fft_weights, &splitComplexInput, 1, vDSP_Length(log2(Float(self.numOfSampleInWindow))), FFTDirection(FFT_FORWARD));
                         
                         vDSP_zvmagsD(&splitComplexInput, 1, &fftMagnitudes, 1, vDSP_Length(self.signalArr.count));
+                        
+
                         
 //                        dump(fftMagnitudes)
                         var dataEntries: [ChartDataEntry] = []
@@ -242,35 +266,41 @@ class ViewController: UIViewController {
                         if (self.currentFrequency >= self.walkfqlb && self.currentFrequency <= self.walkfqub && maxVal >= self.walkMaglb) {
                             self.status = 1
                             self.continuesRunCount = 0
-                            self.lastRunStep = 0.0
-                            self.totalWalkStep += self.lastWalkStep
+                            self.lastRunStep = Queue<Double>()
+                            if self.lastWalkStep.count == self.updateInterval {
+                                self.totalWalkStep += self.lastWalkStep.dequeue()!
+                            }
                             if (self.continuesWalkCount == 0) {
-                                self.lastWalkStep = self.windowSize * self.currentFrequency
+                                self.lastWalkStep.enqueue(self.windowSize * self.currentFrequency / 2)
                             }
                             else {
-                                self.lastWalkStep = (self.windowSize - 2) * (self.currentFrequency - self.previousFrequency) + self.currentFrequency * self.strideWindowSize
+                                self.lastWalkStep.enqueue((self.windowSize - 2) * (self.currentFrequency - self.previousFrequency) + self.currentFrequency * self.strideWindowSize)
+//                                self.lastWalkStep.enqueue(self.currentFrequency * self.windowSize)
                             }
                             self.continuesWalkCount += 1
                             self.previousFrequency = self.currentFrequency
                         }
                         else if (self.currentFrequency > self.runfqlb && self.currentFrequency <= self.runfqub && maxVal >= self.runMaglb) {
                             self.status = 2
-                            self.lastWalkStep = 0.0
+                            self.lastWalkStep = Queue<Double>()
                             self.continuesWalkCount = 0
-                            self.totalRunStep += self.lastRunStep
+                            if self.lastRunStep.count == self.updateInterval {
+                                self.totalRunStep += self.lastRunStep.dequeue()!
+                            }
                             if (self.continuesRunCount == 0) {
-                                self.lastRunStep = self.windowSize * self.currentFrequency
+                                self.lastRunStep.enqueue(self.windowSize * self.currentFrequency / 2)
                             }
                             else {
-                                self.lastRunStep = (self.windowSize - 2) * (self.currentFrequency - self.previousFrequency) + self.currentFrequency * self.strideWindowSize
+                                self.lastRunStep.enqueue((self.windowSize - 2) * (self.currentFrequency - self.previousFrequency) + self.currentFrequency * self.strideWindowSize)
+//                                self.lastRunStep.enqueue(self.windowSize * self.currentFrequency)
                             }
                             self.continuesRunCount += 1
                             self.previousFrequency = self.currentFrequency
                         }
                         else {
                             self.status = 0
-                            self.lastWalkStep = 0.0
-                            self.lastRunStep = 0.0
+                            self.lastWalkStep = Queue<Double>()
+                            self.lastRunStep = Queue<Double>()
                             self.continuesWalkCount = 0
                             self.continuesRunCount = 0
                             self.previousFrequency = 0.0
@@ -289,6 +319,7 @@ class ViewController: UIViewController {
                     else {
                         self.outputLabel.text = "Run"
                     }
+                    self.outputLabel.text = "\(self.currentFrequency)"
                 }
             }
 //            RunLoop.current.add(self.timer!, forMode: .defaultRunLoopMode)
@@ -307,6 +338,15 @@ class ViewController: UIViewController {
         self.isProcessing = false
         startBtn.setTitle("Start", for: UIControlState.normal)
         self.timer.invalidate()
+        self.lastWalkStep = Queue<Double>()
+        self.lastRunStep = Queue<Double>()
+        self.continuesRunCount = 0
+        self.continuesWalkCount = 0
+        self.curIndex = 0
+        self.lastUpdateIndex = 0
+        self.previousFrequency = 0.0
+        self.signalArr = [Double]()
+        self.windowArr = [Double]()
     }
     
     func getDate() -> (String) {
