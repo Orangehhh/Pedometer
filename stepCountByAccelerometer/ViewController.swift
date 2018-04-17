@@ -319,7 +319,7 @@ class ViewController: UIViewController {
                     else {
                         self.outputLabel.text = "Run"
                     }
-                    self.outputLabel.text = "\(self.currentFrequency)"
+//                    self.outputLabel.text = "\(self.currentFrequency)"
                 }
             }
 //            RunLoop.current.add(self.timer!, forMode: .defaultRunLoopMode)
