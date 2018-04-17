@@ -269,6 +269,8 @@ class ViewController: UIViewController {
                         }
                         else {
                             self.status = 0
+                            self.lastWalkStep = 0.0
+                            self.lastRunStep = 0.0
                             self.continuesWalkCount = 0
                             self.continuesRunCount = 0
                             self.previousFrequency = 0.0
