@@ -25,7 +25,7 @@ class ViewController: UIViewController {
 
     let numOfSampleInWindow: Int = 128
     
-    let numOfStrideSample: Int = 25
+    let numOfStrideSample: Int = 30
     
     var windowSize: Double = 0.0
     
@@ -74,6 +74,7 @@ class ViewController: UIViewController {
     var point: Double = 0.0
     
     @IBAction func jumpToAnal(_ sender: UIButton) {
+        
         self.performSegue(withIdentifier: "segue_anal", sender: self)
     }
     @IBOutlet weak var startBtn: UIButton!
