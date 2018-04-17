@@ -25,9 +25,11 @@ class ViewController: UIViewController {
 
     let numOfSampleInWindow: Int = 128
     
-    let numOfStrideSample: Int = 30
+    let numOfStrideSample: Int = 25
     
     var windowSize: Double = 0.0
+    
+    var strideWindowSize: Double = 0.0
     
     var signalArr = [Double]()
     
@@ -43,7 +45,9 @@ class ViewController: UIViewController {
     
     let walkMaglb: Double = 10.0
     
-    var totalWalkStep: Int = 0
+    var lastWalkStep: Double = 0.0
+    
+    var totalWalkStep: Double = 0.0
     
     var previousFrequency: Double = 0.0
     
@@ -57,7 +61,9 @@ class ViewController: UIViewController {
     
     let runMaglb: Double = 1000.0
     
-    var totalRunStep: Int = 0
+    var lastRunStep: Double = 0.0
+    
+    var totalRunStep: Double = 0.0
     
     var continuesRunCount: Int = 0
     
@@ -132,6 +138,7 @@ class ViewController: UIViewController {
 //        addNavBarTitle()
         customBtn()
         self.windowSize = Double(self.numOfSampleInWindow) / self.sampleRate
+        self.strideWindowSize = Double(self.numOfStrideSample) / self.sampleRate
         self.fft_weights = vDSP_create_fftsetupD(vDSP_Length(log2(Float(numOfSampleInWindow))), FFTRadix(kFFTRadix2))
         reset()
     }
@@ -235,23 +242,27 @@ class ViewController: UIViewController {
                         if (self.currentFrequency >= self.walkfqlb && self.currentFrequency <= self.walkfqub && maxVal >= self.walkMaglb) {
                             self.status = 1
                             self.continuesRunCount = 0
+                            self.lastRunStep = 0.0
+                            self.totalWalkStep += self.lastWalkStep
                             if (self.continuesWalkCount == 0) {
-                                self.totalWalkStep += Int(self.windowSize * self.currentFrequency)
+                                self.lastWalkStep = self.windowSize * self.currentFrequency
                             }
                             else {
-                                self.totalWalkStep += Int((self.windowSize - 1) * (self.currentFrequency - self.previousFrequency) + self.previousFrequency)
+                                self.lastWalkStep = (self.windowSize - 2) * (self.currentFrequency - self.previousFrequency) + self.currentFrequency * self.strideWindowSize
                             }
                             self.continuesWalkCount += 1
                             self.previousFrequency = self.currentFrequency
                         }
                         else if (self.currentFrequency > self.runfqlb && self.currentFrequency <= self.runfqub && maxVal >= self.runMaglb) {
                             self.status = 2
+                            self.lastWalkStep = 0.0
                             self.continuesWalkCount = 0
+                            self.totalRunStep += self.lastRunStep
                             if (self.continuesRunCount == 0) {
-                                self.totalRunStep += Int(self.windowSize * self.currentFrequency)
+                                self.lastRunStep = self.windowSize * self.currentFrequency
                             }
                             else {
-                                self.totalRunStep += Int((self.windowSize - 1) * (self.currentFrequency - self.previousFrequency) + self.previousFrequency)
+                                self.lastRunStep = (self.windowSize - 2) * (self.currentFrequency - self.previousFrequency) + self.currentFrequency * self.strideWindowSize
                             }
                             self.continuesRunCount += 1
                             self.previousFrequency = self.currentFrequency
@@ -265,8 +276,8 @@ class ViewController: UIViewController {
 //                        self.frequencyLabel.text = "\(self.currentFrequency) \n   \(self.point)  \n \(IdxOfmaxVal)"
 ////                        print(self.totalWalkStep)
                     }
-                    self.walkStepLabel.text = "\(self.totalWalkStep)"
-                    self.runStepLabel.text = "\(self.totalRunStep)"
+                    self.walkStepLabel.text = "\(Int(self.totalWalkStep))"
+                    self.runStepLabel.text = "\(Int(self.totalRunStep))"
                     if self.status == 0 {
                         self.outputLabel.text = "Still"
                     }
@@ -289,8 +300,8 @@ class ViewController: UIViewController {
         self.motion.stopAccelerometerUpdates()
 //        self.lineChartView.data = nil
         self.outputLabel.text = ""
-        self.walkStepLabel.text = "\(self.totalWalkStep)"
-        self.runStepLabel.text = "\(self.totalRunStep)"
+        self.walkStepLabel.text = "\(Int(self.totalWalkStep))"
+        self.runStepLabel.text = "\(Int(self.totalRunStep))"
         self.isProcessing = false
         startBtn.setTitle("Start", for: UIControlState.normal)
         self.timer.invalidate()

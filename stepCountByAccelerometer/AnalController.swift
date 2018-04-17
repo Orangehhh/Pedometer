@@ -25,9 +25,11 @@ class AnalController: UIViewController {
     
     let numOfSampleInWindow: Int = 128
     
-    let numOfStrideSample: Int = 30
+    let numOfStrideSample: Int = 25
     
     var windowSize: Double = 0.0
+    
+    var strideWindowSize: Double = 0.0
     
     var signalArr = [Double]()
     
@@ -43,7 +45,7 @@ class AnalController: UIViewController {
     
     let walkMaglb: Double = 10.0
     
-    var totalWalkStep: Int = 0
+    var totalWalkStep: Double = 0.0
     
     var previousFrequency: Double = 0.0
     
@@ -57,7 +59,7 @@ class AnalController: UIViewController {
     
     let runMaglb: Double = 1000.0
     
-    var totalRunStep: Int = 0
+    var totalRunStep: Double = 0.0
     
     var continuesRunCount: Int = 0
     
@@ -111,6 +113,7 @@ class AnalController: UIViewController {
         
         setChartView()
         self.windowSize = Double(self.numOfSampleInWindow) / self.sampleRate
+        self.strideWindowSize = Double(self.numOfStrideSample) / self.sampleRate
         self.fft_weights = vDSP_create_fftsetupD(vDSP_Length(log2(Float(numOfSampleInWindow))), FFTRadix(kFFTRadix2))
         startPredict()
     }
@@ -243,10 +246,10 @@ class AnalController: UIViewController {
                             self.status = 1
                             self.continuesRunCount = 0
                             if (self.continuesWalkCount == 0) {
-                                self.totalWalkStep += Int(self.windowSize * self.currentFrequency)
+                                self.totalWalkStep += self.windowSize * self.currentFrequency
                             }
                             else {
-                                self.totalWalkStep += Int((self.windowSize - 1) * (self.currentFrequency - self.previousFrequency) + self.previousFrequency)
+                                self.totalWalkStep += (self.windowSize - 2) * (self.currentFrequency - self.previousFrequency) + self.currentFrequency * self.strideWindowSize
                             }
                             self.continuesWalkCount += 1
                             self.previousFrequency = self.currentFrequency
@@ -255,10 +258,10 @@ class AnalController: UIViewController {
                             self.status = 2
                             self.continuesWalkCount = 0
                             if (self.continuesRunCount == 0) {
-                                self.totalRunStep += Int(self.windowSize * self.currentFrequency)
+                                self.totalRunStep += self.windowSize * self.currentFrequency
                             }
                             else {
-                                self.totalRunStep += Int((self.windowSize - 1) * (self.currentFrequency - self.previousFrequency) + self.previousFrequency)
+                                self.totalRunStep += (self.windowSize - 2) * (self.currentFrequency - self.previousFrequency) + self.currentFrequency * self.strideWindowSize
                             }
                             self.continuesRunCount += 1
                             self.previousFrequency = self.currentFrequency
